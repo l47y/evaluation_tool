@@ -2,3 +2,5 @@
 deployment.R/*
 experiments.R/*
 rsconnect/*
+.httr-oauth
+.httr-oauth-SUSPENDED

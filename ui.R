@@ -10,7 +10,6 @@ ui <- dashboardPage(
       menuItem('Estadísticas', tabName = 'estadisticas'),
       menuItem('Mapa', tabName = 'mapa'),
       menuItem('Ver Data', tabName = 'verdata')
-
     )
   ),
   
@@ -29,9 +28,8 @@ ui <- dashboardPage(
             infoBoxOutput('numeroevals', width = 3)
           ),
           box(title = 'Cargar/Guardar datos', solidHeader = T, collapsible = T, width = 3,
-              fileInput('datafile', 'Eligir datos', multiple = FALSE,
-                        accept = c('text/csv', 'text/comma-separated-values,text/plain', '.csv')),
-              downloadButton('guardarydescargar', 'Guardar y Descargar')
+              actionButton('connecttogogle', 'Cargar desde Google'),
+              actionButton('guardar', 'Guardar')
           ),
           box(title = 'Añadir curso', collapsible = T, solidHeader = T, width = 3,
             tags$div(title = mouseHoverStr,
@@ -94,6 +92,8 @@ ui <- dashboardPage(
       ),
       
       tabItem(tabName = 'verdata',
+              selectInput('alldataoronlycursos', 'Qué quiere ver?', 
+                          choices = c('Resúmen de Cursos', 'Todos los datos')),
               DT::dataTableOutput('viewdata')
       )
     )

@@ -3,6 +3,7 @@ source('config.R')
 shinyServer(function(input, output, session) {
   
   globaldata <- reactiveVal(NULL) # working data table during session
+  googleSessionTable <- reactiveVal(NULL) # session object of google sheets
   
   ############################################### ~ REACTIVE STUFF –
   ###############################################
@@ -15,12 +16,33 @@ shinyServer(function(input, output, session) {
   ############################################### ~ OBSERVE STUFF –
   ###############################################
   
-  observe({
-    file <- input$datafile
-    if (is.null(file)) {
-      return(NULL) 
-   }
-    globaldata(read_csv(file$datapath))
+  observeEvent(input$connecttogogle, {
+    gs_auth(new_user = TRUE)
+    tables <- gs_ls()$sheet_title
+    if (!'Mis_Cursos' %in% tables) {
+      showNotification('No se han podido encontrar datos de tus cursos.', duration = 4, 
+                       type = 'error')
+      sheet <- NULL
+    } else {
+      sheet <- gs_title('Mis_Cursos') %>% gs_gs() 
+      table <- gs_read(sheet, 1)
+      globaldata(table)
+    }
+    googleSessionTable(sheet)
+  })
+  
+  observeEvent(input$guardar, {
+    showNotification('Guardando datos .... Espere un momento por favor.')
+    if (is.null(globaldata()) == F) {
+      if (is.null(googleSessionTable()) == F) {
+        gs_delete(googleSessionTable())
+      }
+      gs_new('Mis_Cursos', ws_title = 'Cursos', input = globaldata(), 
+             trim = T, verbose = F)
+      showNotification('Los datos se han guardado con éxito.')
+    } else {
+      showNotification('No hay datos que guardar.')
+    }
   })
   
   observeEvent(input$editarcurso, {
@@ -34,8 +56,8 @@ shinyServer(function(input, output, session) {
     empresa <- parttmp$Empresa[1]
     fecha <- input$editarfechadecurso
     evals <- parttmp$Evaluaciones
-    lon <- parttmp$Lon
-    lat <- parttmp$Lat
+    lon <- parttmp$Lon[1]
+    lat <- parttmp$Lat[1]
     
     nombreTyped <- input$editarnombredecurso != ''
     empresaTyped <- input$editarempresadelcurso != ''
@@ -60,6 +82,10 @@ shinyServer(function(input, output, session) {
         coords <- getCityCoordinates(input$editarlugardecurso, CountryOfCursos)
         lon <- coords$lon
         lat <- coords$lat
+        if (any(lon == 0, lat == 0)) {
+          showNotification('No se ha podido encontrar el lugar en el mapa.', duration = 4, 
+                           type = 'warning')
+        }
       }
       if (input$editarevaluaciones != '') {
         evals <- as.numeric(unlist(strsplit(input$editarevaluaciones, ","), use.names = F))
@@ -163,11 +189,6 @@ shinyServer(function(input, output, session) {
   })
   
   # # # # Box: Cargar/Guardar
-  
-  output$guardarydescargar <- downloadHandler(
-    filename = function() {'Miscursos.csv'},
-    content = function(file) {write_csv(globaldata(), file)}
-  )
   
   # # # # Box: Editar
   
@@ -283,13 +304,15 @@ shinyServer(function(input, output, session) {
     )
     
     tmp <- globaldata()
+    tmp$Lat <- unlist(lapply(tmp$Lat, convert_coords, LonOrLat = 'Lat'), use.names = F)
+    tmp$Lon <- unlist(lapply(tmp$Lon, convert_coords, LonOrLat = 'Lon'), use.names = F)
     Cursos <- tmp %>% group_by(Lugar) %>% 
       summarize(NumCursos = length(unique(Curso)),
                 Media = round(mean(Evaluaciones), digits = 3))
     coords <- tmp[!duplicated(tmp[, 'Lugar']), ] %>% select(Lugar, Lon, Lat)
     df <- left_join(coords, Cursos, by = 'Lugar')
     df$info <- paste('Ciudad: ', df$Lugar, '<br>Numero cursos: ', df$NumCursos, '<br>Media: ', df$Media)
-
+    print(df)
     p <- plot_geo(df, lat = ~Lat, lon = ~Lon, size = ~NumCursos, mode='markers',
              color = ~Media, text = df$info, hoverinfo = 'text', 
              marker = list(sizeref = 0.2, sizemode='area')) %>%
@@ -306,7 +329,12 @@ shinyServer(function(input, output, session) {
   
   output$viewdata <- DT::renderDataTable({
     validate(need(is.null(globaldata()) == F, noDataStr))
-    tmp <- globaldata() %>% select(Curso, Lugar, Empresa, Fecha, Evaluaciones)
+    if(input$alldataoronlycursos == 'Resúmen de Cursos') {
+      tmp <- globaldata() %>% select(Curso, Lugar, Empresa, Fecha)
+      tmp <- tmp[!duplicated(tmp), ]
+    } else {
+      tmp <- globaldata() %>% select(Curso, Lugar, Empresa, Fecha, Evaluaciones)
+    }
     datatable(tmp, options = list(
       autowidth = F, scrollY = T, searching = T, searchHighlight = T, pageLength = 20
     ))

@@ -56,6 +56,21 @@ getCityCoordinates <- function(city, CountryCode) {
   if(is.vector(x)){
     lon <- x[[1]]$lon
     lat <- x[[1]]$lat    
+  } else {
+    lon <- 0
+    lat <- 0
   }
   return(list('lon' = lon, 'lat' = lat))
 }
+
+convert_coords <- function(coord, LonOrLat = 'Lon') {
+  splitted <- unlist(strsplit(coord, split = ''), use.names = F)
+  where_points <- which(splitted == '.')
+  splitted <- splitted[-where_points]
+  position <- case_when(all(LonOrLat == 'Lon', splitted[1] == '-') ~ 2,
+                        all(LonOrLat == 'Lon', splitted[1] != '-') ~ 1,
+                        LonOrLat == 'Lat' ~ 2)
+  splitted <- unlist(append(as.list(splitted), '.', position), use.names = F)
+  return(as.numeric(str_flatten(splitted)))
+}
+
