@@ -4,3 +4,6 @@ experiments.R/*
 rsconnect/*
 .httr-oauth
 .httr-oauth-SUSPENDED
+deployment/
+.shiny_run/
+shinyShortcut
