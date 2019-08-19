@@ -15,7 +15,7 @@ ui <- dashboardPage(
   
   dashboardBody(
     shinyDashboardThemes(
-      theme = 'purple_gradient'
+      theme = 'poor_mans_flatly'
     ),
     
     tabItems(

@@ -312,7 +312,6 @@ shinyServer(function(input, output, session) {
     coords <- tmp[!duplicated(tmp[, 'Lugar']), ] %>% select(Lugar, Lon, Lat)
     df <- left_join(coords, Cursos, by = 'Lugar')
     df$info <- paste('Ciudad: ', df$Lugar, '<br>Numero cursos: ', df$NumCursos, '<br>Media: ', df$Media)
-    print(df)
     p <- plot_geo(df, lat = ~Lat, lon = ~Lon, size = ~NumCursos, mode='markers',
              color = ~Media, text = df$info, hoverinfo = 'text', 
              marker = list(sizeref = 0.2, sizemode='area')) %>%

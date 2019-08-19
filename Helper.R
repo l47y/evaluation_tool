@@ -1,12 +1,12 @@
 
 add_plotlayout <- function(p) {
-  p %<>% layout(plot_bgcolor = "transparent", 
-                paper_bgcolor = "transparent",
-                font = list(size = 14, color = 'white'),
-                xaxis = plot_axisstyle <- list(tickfont = list(color = 'white'),
-                                               gridwidth = 0, showline = F, showgrid = F, zeroline = F),
-                yaxis = plot_axisstyle <- list(tickfont = list(color = 'white'),
-                                               gridwith = 0, showline = F, showgrid = F, zeroline = F),
+  p %<>% layout(#plot_bgcolor = "transparent", 
+                #paper_bgcolor = "transparent",
+                #font = list(size = 14, color = 'white'),
+                #xaxis = plot_axisstyle <- list(tickfont = list(color = 'white'),
+                #                               gridwidth = 0, showline = F, showgrid = F, zeroline = F),
+                #yaxis = plot_axisstyle <- list(tickfont = list(color = 'white'),
+                #                               gridwith = 0, showline = F, showgrid = F, zeroline = F),
                 margin = list(l = 40, r = 40, b = 40, t = 40))
   return(p)
 }
